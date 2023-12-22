@@ -42,12 +42,12 @@ def eq(x: float, y: float) -> float:
 
 def max(x: float, y: float) -> float:
     "$f(x) =$ x if x is greater than y else y"
-    return x if x > y else y
+    return add(mul(x, add(1.0, neg(cmp := lt(x, y)))), mul(y, cmp))
 
 
 def is_close(x: float, y: float) -> float:
     "$f(x) = |x - y| < 1e-2$"
-    return abs(x - y) < 1e-2
+    return lt(mul(neg(lt(x, y)), add(x, neg(y))), 1e-2)
 
 
 def sigmoid(x: float) -> float:
@@ -62,7 +62,7 @@ def sigmoid(x: float) -> float:
 
     for stability.
     """
-    return 1.0 / (1.0 + math.exp(-x)) if x >= 0.0 else math.exp(x) / (1.0 + math.exp(x))
+    return mul(exp(x), inv(add(1.0, exp(x)))) if x < 0.0 else inv(add(1.0, exp(neg(x))))
 
 
 def relu(x: float) -> float:
@@ -71,7 +71,7 @@ def relu(x: float) -> float:
 
     (See https://en.wikipedia.org/wiki/Rectifier_(neural_networks) .)
     """
-    return x if x > 0.0 else 0.0
+    return mul(x, add(1.0, neg(lt(x, 0.0))))
 
 
 EPS = 1e-6
@@ -89,7 +89,7 @@ def exp(x: float) -> float:
 
 def log_back(x: float, d: float) -> float:
     r"If $f = log$ as above, compute $d \times f'(x)$"
-    return inv(x)
+    return mul(d, inv(x))
 
 
 def inv(x: float) -> float:
@@ -99,12 +99,12 @@ def inv(x: float) -> float:
 
 def inv_back(x: float, d: float) -> float:
     r"If $f(x) = 1/x$ compute $d \times f'(x)$"
-    return -d * inv(x) ** 2
+    return mul(neg(d), inv(x) ** 2)
 
 
 def relu_back(x: float, d: float) -> float:
     r"If $f = relu$ compute $d \times f'(x)$"
-    return d if x >= 0.0 else 0.0
+    return mul(d, lt(0.0, x))
 
 
 # ## Task 0.3
@@ -134,7 +134,7 @@ def map(fn: Callable[[float], float]) -> Callable[[Iterable[float]], Iterable[fl
 
 def negList(ls: Iterable[float]) -> Iterable[float]:
     "Use `map` and `neg` to negate each element in `ls`"
-    return map(lambda x: -x)(ls)
+    return map(neg)(ls)
 
 
 def zipWith(
@@ -162,7 +162,7 @@ def zipWith(
 
 def addLists(ls1: Iterable[float], ls2: Iterable[float]) -> Iterable[float]:
     "Add the elements of `ls1` and `ls2` using `zipWith` and `add`"
-    return zipWith(lambda x, y: x + y)(ls1, ls2)
+    return zipWith(add)(ls1, ls2)
 
 
 def reduce(
@@ -192,9 +192,9 @@ def reduce(
 
 def sum(ls: Iterable[float]) -> float:
     "Sum up a list using `reduce` and `add`."
-    return reduce(lambda x, y: x + y, 0.0)(ls)
+    return reduce(add, 0.0)(ls)
 
 
 def prod(ls: Iterable[float]) -> float:
     "Product of a list using `reduce` and `mul`."
-    return reduce(lambda x, y: x * y, 1.0)(ls)
+    return reduce(mul, 1.0)(ls)
