@@ -132,7 +132,6 @@ class Neg(ScalarFunction):
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
         a = a if isinstance(a, float) else float(a)
-        ctx.save_for_backward(a)
         return operators.neg(a)
 
     @staticmethod
@@ -176,13 +175,14 @@ class Exp(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float) -> float:
-        ctx.save_for_backward(a)
-        return operators.exp(a)
+        e = operators.exp(a)
+        ctx.save_for_backward(e)
+        return e
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        (a,) = ctx.save_for_backward()
-        return d_output * operators.exp(a)
+        (e,) = ctx.save_for_backward()
+        return operators.mul(d_output, e)
 
 
 class LT(ScalarFunction):
@@ -190,7 +190,6 @@ class LT(ScalarFunction):
 
     @staticmethod
     def forward(ctx: Context, a: float, b: float) -> float:
-        ctx.save_for_backward(a, b)
         return operators.lt(a, b)
 
     @staticmethod
