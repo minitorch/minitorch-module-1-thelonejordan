@@ -162,7 +162,11 @@ class Scalar:
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
-        return zip(h.inputs, h.last_fn.backward(h.ctx, float(d_output)))
+        derivatives = h.last_fn._backward(h.ctx, float(d_output))
+        assert len(derivatives) == len(
+            h.inputs
+        ), "No. of inputs & derivatives don't match"
+        return [(x, y) for x, y in zip(h.inputs, derivatives)]
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
@@ -188,7 +192,6 @@ def derivative_check(f: Any, *scalars: Scalar) -> None:
     """
     out = f(*scalars)
     out.backward()
-
     err_msg = """
 Derivative check at arguments f(%s) and received derivative f'=%f for argument %d,
 but was expecting derivative f'=%f from central difference."""

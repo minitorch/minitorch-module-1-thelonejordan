@@ -62,7 +62,6 @@ class ScalarFunction:
         # Call forward with the variables.
         c = cls._forward(ctx, *raw_vals)
         assert isinstance(c, float), "Expected return type float got %s" % (type(c))
-
         # Create a new variable from the result with a new history.
         back = minitorch.scalar.ScalarHistory(cls, ctx, scalars)
         return minitorch.scalar.Scalar(c, back)
@@ -91,7 +90,7 @@ class Log(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        (a,) = ctx.saved_values
+        (a,) = ctx.saved_tensors
         return operators.log_back(a, d_output)
 
 
@@ -108,7 +107,7 @@ class Mul(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
-        a, b = ctx.saved_tensors()
+        a, b = ctx.saved_tensors
         return operators.mul(d_output, b), operators.mul(d_output, a)
 
 
@@ -122,7 +121,7 @@ class Inv(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        (a,) = ctx.saved_tensors()
+        (a,) = ctx.saved_tensors
         return operators.inv_back(a, d_output)
 
 
@@ -150,7 +149,7 @@ class Sigmoid(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        sig = ctx.save_for_backward()
+        (sig,) = ctx.saved_tensors
         return operators.mul(
             d_output, operators.mul(sig, operators.add(1.0, operators.neg(sig)))
         )
@@ -166,7 +165,7 @@ class ReLU(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        (a,) = ctx.saved_tensors()
+        (a,) = ctx.saved_tensors
         return operators.relu_back(a, d_output)
 
 
@@ -181,7 +180,7 @@ class Exp(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        (e,) = ctx.save_for_backward()
+        (e,) = ctx.saved_tensors
         return operators.mul(d_output, e)
 
 
@@ -194,7 +193,7 @@ class LT(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
-        return 0.0
+        return 0.0, 0.0
 
 
 class EQ(ScalarFunction):
@@ -206,4 +205,4 @@ class EQ(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> Tuple[float, float]:
-        return 0.0
+        return 0.0, 0.0
