@@ -68,13 +68,13 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     def dfs(v: Variable) -> None:
         if v.unique_id not in visited:
             visited.add(v.unique_id)
-            if len(p := v.parents) > 0:
-                for pv in p:
-                    dfs(pv)
+            for pv in v.parents:
+                dfs(pv)
             topo.append(v)
 
     dfs(variable)
-    return topo
+    for v in reversed(topo):
+        yield v
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -88,9 +88,8 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    nodes_topo = reversed(topological_sort(variable))
     dct = {variable.unique_id: float(deriv)}
-    for v in nodes_topo:
+    for v in topological_sort(variable):
         d = dct[v.unique_id]
         if v.is_leaf():
             v.accumulate_derivative(d)
